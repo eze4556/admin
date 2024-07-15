@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ProductService } from 'src/app/services/producto.service'; 
-import { AlertController } from '@ionic/angular'; 
-import { Producto } from 'src/app/models/producto'; 
+import { ProductService } from 'src/app/services/producto.service';
+import { AlertController } from '@ionic/angular';
+import { Producto } from 'src/app/models/producto';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 
@@ -17,14 +17,20 @@ throw new Error('Method not implemented.');
 }
   listProductos: any; // Declara la variable como un array de Productos
 
-  productos: any[]= []; 
+  productos: any[]= [];
+
+  filteredProducts: any[] = [];
+  searchTerm: string = '';
+  currentPage: number = 1;
+  pageSize: number = 5;
+  totalPages: number = 1;
 
 
   constructor(private router: Router, private productService: ProductService,
     private alertCtrl: AlertController, private http: HttpClient) {}
 
      apiUrl: string = environment.apiUrl;
-    
+
 
 
   ngOnInit(): void {
@@ -41,17 +47,59 @@ throw new Error('Method not implemented.');
 
 
   //Productos
-getProductos(){
- this.http.get<any[]>(`${environment.apiUrl}/producto`).subscribe(
+// getProductos(){
+//  this.http.get<any[]>(`${environment.apiUrl}/producto`).subscribe(
+//       (response) => {
+//         this.productos = response;
+//         console.log('=>',response)
+//       },
+//       (error) => {
+//         console.error('Error al obtener los productos:', error);
+//       }
+//     );
+// }
+
+getProductos() {
+    this.http.get<any[]>(`${environment.apiUrl}/producto`).subscribe(
       (response) => {
         this.productos = response;
-        console.log('=>',response)
+        this.filteredProducts = response;
+        this.totalPages = Math.ceil(this.filteredProducts.length / this.pageSize);
+        console.log('=>', response);
       },
       (error) => {
         console.error('Error al obtener los productos:', error);
       }
     );
-}
+  }
+
+   filterProducts() {
+    this.filteredProducts = this.productos.filter(producto =>
+      producto.nombre.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      producto.descripcion.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+    this.currentPage = 1;
+    this.totalPages = Math.ceil(this.filteredProducts.length / this.pageSize);
+  }
+
+  paginatedProducts() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredProducts.slice(start, end);
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
 
 
 
@@ -64,7 +112,7 @@ getProductos(){
   }
 
 
-  
+
   async mostrarAlerta() {
     const alert = await this.alertCtrl.create({
       header: 'Eliminado correctamente',
@@ -74,13 +122,13 @@ getProductos(){
 
     await alert.present();
   }
-  
+
   goBack() {
     window.history.back();
   }
 
   navigateToPage1() {
-    this.router.navigate(['/home']); // 
+    this.router.navigate(['/home']); //
   }
 
   navigateToPage3() {
@@ -90,7 +138,7 @@ getProductos(){
   navigateToPage4() {
     this.router.navigate(['/productoNuevo']); //
   }
-  
+
   navigateToPage5() {
     this.router.navigate(['/qSomo']); //
   }
@@ -103,7 +151,7 @@ getProductos(){
   navigateToPage8() {
     this.router.navigate(['/products']); //
   }
-  
+
 
 
 
